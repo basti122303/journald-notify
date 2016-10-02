@@ -16,8 +16,7 @@ with open(_in_same_dir("journald_notify", "__version__.py")) as version_file:
 install_requires = [
     "click",
     "netifaces",
-    "requests",
-    "PyYAML"
+    "requests"
 ]
 setup(name="journald-notify",
       classifiers=[

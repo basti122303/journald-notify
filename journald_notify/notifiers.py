@@ -1,8 +1,9 @@
 import socket
-import json
 import requests
-from smtplib import SMTP
-from . import config
+from smtplib import SMTP, SMTP_SSL
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from ._config import ConfigError
 
 
 class Notifier(object):
@@ -10,71 +11,80 @@ class Notifier(object):
         raise NotImplementedError()
 
 
-class Pushbullet(Notifier):
+class NotifierGroup(object):
+    def __init__(self):
+        self._notifiers = []
+
+    def add_notifier(self, notifier):
+        self._notifiers.append(notifier)
+
+    def notify(self, title, message):
+        for notifier in self._notifiers:
+            notifier.notify(title, message)
+
+
+class PushbulletNotifier(Notifier):
     PUSH_URL = "https://api.pushbullet.com/v2/pushes"
 
-    def __init__(self, key, prepend_hostname):
+    def __init__(self, key, prepend_hostname=True):
         self._session = requests.Session()
         self._session.auth = (key, "")
         self._session.headers.update({'Content-Type': 'application/json'})
         self._prepend_hostname = prepend_hostname
 
-    def notify(self, title, message):
+    def _prepare_data(self, title, message):
         if self._prepend_hostname:
             title = "{} - {}".format(socket.gethostname(), title)
 
-        data = {"type": "note", "title": title, "body": message}
-        r = self._session.post(self.PUSH_URL, data=json.dumps(data))
+        return {"type": "note", "title": title, "body": message}
+
+    def notify(self, title, message):
+        r = self._session.post(PushbulletNotifier.PUSH_URL, json=self._prepare_data(title, message))
         r.raise_for_status()
 
 
-class Smtp(Notifier):
-    def __init__(self, smtp_host, smtp_port, username, password, use_tls, from_addr, to_addrs):
-        self._smtp_host = smtp_host
-        self._smtp_port = smtp_port
-        self._username = username
-        self._password = password
-        self._use_tls = use_tls
+class SMTPNotifier(Notifier):
+    def __init__(self, host, from_addr, to_addrs, port=0, tls=True, username=None, password=None):
+        self._host = host
         self._from_addr = from_addr
         self._to_addrs = to_addrs
+        self._port = port
+        self._tls = tls
+        self._username = username
+        self._password = password
 
-    def notify(self, title, message):
-        mailserver = SMTP(self._smtp_host, self._smtp_port)
-        if self._use_tls:
-            mailserver.starttls()
-
+    def _prepare_conn(self):
+        if self._tls:
+            mailserver = SMTP_SSL(self._host, self._port)
+        else:
+            mailserver = SMTP(self._host, self._port)
         if self._username:
             mailserver.login(self._username, self._password)
+        return mailserver
 
-        message = "From: {from_addr}\nTo:{to}\nSubject:{title}\n{message}".format(
-            from_addr=self._from_addr, to=", ".join(self._to_addrs), title=title, message=message)
+    def _prepare_msg(self, subject, body):
+        msg = MIMEMultipart()
+        msg["From"] = self._from_addr
+        msg["To"] = ", ".join(self._to_addrs)
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "plain"))
+        return msg
 
-        mailserver.sendmail(self._from_addr, self._to_addrs, message)
-        mailserver.quit()
+    def notify(self, title, message):
+        with self._prepare_conn() as mailserver:
+            mailserver.sendmail(self._from_addr, self._to_addrs, self._prepare_msg(title, message).as_string())
 
 
-def create_notifiers(app_config):
-    notifiers = []
-    for n in app_config['notifiers']:
+def create_notifiers(notifier_config):
+    notifier_group = NotifierGroup()
+    for n in notifier_config:
         if "type" not in n:
-            raise config.ConfigError("Missing notifer type")
+            raise ConfigError("Missing notifer type")
         if n["type"] == "pushbullet":
-            if "key" not in n:
-                raise config.ConfigError("Missing key for Pushbullet notifier")
-            notifiers.append(Pushbullet(n['key'], n.get('prepend_hostname', False)))
+            notifier_group.add_notifier(PushbulletNotifier(**n["config"]))
         elif n["type"] == "smtp":
-            for required in ["host", "from", "to"]:
-                if required not in n:
-                    raise config.ConfigError("\"{}\" is a required value for SMTP notifier")
-            notifiers.append(Smtp(
-                n['host'],
-                int(n.get('port', 25)),
-                n.get("user"),
-                n.get("password"),
-                n.get("use_tls", False),
-                n['from'],
-                n['to']))
+            notifier_group.add_notifier(SMTPNotifier(**n["config"]))
         else:
-            raise config.ConfigError("Unknown notifer type {}".format(n['type']))
+            raise ConfigError("Unknown notifer type {}".format(n['type']))
 
-    return notifiers
+    return notifier_group
