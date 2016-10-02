@@ -1,0 +1,12 @@
+[Unit]
+Description=journald-notify
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/journald-notify run -c /etc/journald-notify.yml
+User=journald-notify
+
+[Install]
+WantedBy=multi-user.target
