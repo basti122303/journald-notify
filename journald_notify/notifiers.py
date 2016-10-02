@@ -1,4 +1,7 @@
+import logging
 import socket
+from time import sleep
+import click
 import requests
 from smtplib import SMTP, SMTP_SSL
 from email.mime.multipart import MIMEMultipart
@@ -9,6 +12,13 @@ from ._config import ConfigError
 class Notifier(object):
     def notify(self, title, message):
         raise NotImplementedError()
+
+    def _resolve_params(self, title, message):
+        if callable(title):
+            title = title()
+        if callable(message):
+            message = message()
+        return title, message
 
 
 class NotifierGroup(object):
@@ -31,16 +41,31 @@ class PushbulletNotifier(Notifier):
         self._session.auth = (key, "")
         self._session.headers.update({'Content-Type': 'application/json'})
         self._prepend_hostname = prepend_hostname
+        if self._prepend_hostname:
+            self._hostname = socket.gethostname()
+
+        self._logger = logging.getLogger("journald-notify")
 
     def _prepare_data(self, title, message):
+        title, message = self._resolve_params(title, message)
         if self._prepend_hostname:
-            title = "{} - {}".format(socket.gethostname(), title)
+            title = "{} - {}".format(self._hostname, title)
 
         return {"type": "note", "title": title, "body": message}
 
     def notify(self, title, message):
-        r = self._session.post(PushbulletNotifier.PUSH_URL, json=self._prepare_data(title, message))
-        r.raise_for_status()
+        while True:
+            try:
+                r = self._session.post(PushbulletNotifier.PUSH_URL, json=self._prepare_data(title, message))
+                r.raise_for_status()
+            except requests.exceptions.ConnectionError as e:
+                self._logger.warn("Could not connect to pushbullet: {}".format(e))
+                sleep(5)
+            except requests.exceptions.Timeout as e:
+                self._logger.warn("Timeout while connecting to pushbullet: {}".format(e))
+                sleep(5)
+            else:
+                break
 
 
 class SMTPNotifier(Notifier):
@@ -62,7 +87,8 @@ class SMTPNotifier(Notifier):
             mailserver.login(self._username, self._password)
         return mailserver
 
-    def _prepare_msg(self, subject, body):
+    def _prepare_msg(self, title, message):
+        subject, body = self._resolve_params(title, message)
         msg = MIMEMultipart()
         msg["From"] = self._from_addr
         msg["To"] = ", ".join(self._to_addrs)
@@ -75,15 +101,24 @@ class SMTPNotifier(Notifier):
             mailserver.sendmail(self._from_addr, self._to_addrs, self._prepare_msg(title, message).as_string())
 
 
+class StdoutNotifier(Notifier):
+    def notify(self, title, message):
+        click.echo("Title: {}\nMessage: {}".format(title, message))
+
+
 def create_notifiers(notifier_config):
     notifier_group = NotifierGroup()
     for n in notifier_config:
         if "type" not in n:
             raise ConfigError("Missing notifer type")
+        if "enabled" in n and not n["enabled"]:
+            continue
         if n["type"] == "pushbullet":
             notifier_group.add_notifier(PushbulletNotifier(**n["config"]))
         elif n["type"] == "smtp":
             notifier_group.add_notifier(SMTPNotifier(**n["config"]))
+        elif n["type"] == "stdout":
+            notifier_group.add_notifier(StdoutNotifier())
         else:
             raise ConfigError("Unknown notifer type {}".format(n['type']))
 

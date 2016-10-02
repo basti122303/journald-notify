@@ -27,7 +27,7 @@ class Config(object):
         for f in filters:
             _filters.append({
                 "match": re.compile(f["match"]),
-                "title": f["match"],
+                "title": f["title"],
                 "body": f["body"]
             })
         return _filters

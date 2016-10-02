@@ -1,4 +1,6 @@
+from functools import partial
 import os
+import threading
 import tempfile
 import socket
 import logging
@@ -27,7 +29,7 @@ logger = _log_init()
 ipfinder = IPFinder()
 
 
-def _notify(app_notifiers, title, body, retry):
+def _notify(app_notifiers, title, body, retry=False):
     for notifier in app_notifiers._notifiers:
         while True:
             try:
@@ -41,28 +43,30 @@ def _notify(app_notifiers, title, body, retry):
                 break
 
 
-def _notify_boot(app_notifiers, boot_file_path, boot_settings):
-    if os.path.isfile(boot_file_path):
-        return
-
+def _get_ip_info(add_public_ip, add_local_ips):
     body = ""
-
-    if boot_settings.get("add_public_ip", False):
+    if add_public_ip:
         try:
             body += "Public IP: {}\n".format(ipfinder.public_ip)
         except Exception as e:
             logger.error("Could not get the public IP: {}".format(e))
             logger.debug("Could not get the public IP: {}", traceback.format_exc())
             body += "Failed to get the public IP\n"
-
-    if boot_settings.get("add_local_ips", False):
+    if add_local_ips:
         try:
             body += "Local IPs:\n{}\n\n".format("\n".join("- {}: {}".format(*addr) for addr in ipfinder.local_ips))
         except Exception as e:
             logger.error("Could not get local IPs: {}".format(e))
             logger.debug("Could not get local IPs: {}", traceback.format_exc())
             body += "Failed to get local IPs\n"
+    return body
 
+
+def _notify_boot(app_notifiers, boot_file_path, boot_settings):
+    if os.path.isfile(boot_file_path):
+        return
+
+    body = partial(_get_ip_info, boot_settings.get("add_public_ip", False), boot_settings.get("add_local_ips", False))
     _notify(app_notifiers, "System booted", body, True)
 
     with open(boot_file_path, "wb"):
@@ -70,11 +74,11 @@ def _notify_boot(app_notifiers, boot_file_path, boot_settings):
 
 
 @click.group()
-def main_entry_point():
+def entry_point():
     pass
 
 
-@main_entry_point.command()
+@entry_point.command()
 @click.option("-c", "--config-file", required=True, type=click.File("r"))
 @click.option("--boot-file", "boot_file_path", required=False, type=click.Path(exists=False, dir_okay=False, readable=False, path_type=str), default=os.path.join(tempfile.gettempdir(), ".journald-notify_boot"), envvar="JOURNALD_NOTIFY_BOOTFILE")
 def run(config_file, boot_file_path):
@@ -83,7 +87,9 @@ def run(config_file, boot_file_path):
 
     boot_settings = app_config.get_settings("boot")
     if boot_settings and boot_settings.get("notify", False):
-        _notify_boot(app_notifiers, boot_file_path, boot_settings)
+        # Notification of boot should not hold up reading from journal ASAP
+        boot_notify_thread = threading.Thread(target=_notify_boot, args=(app_notifiers, boot_file_path, boot_settings), daemon=True)
+        boot_notify_thread.start()
 
     reader = journal.Reader()
     reader.seek_tail()
@@ -94,26 +100,26 @@ def run(config_file, boot_file_path):
                 m = f["match"].search(entry["MESSAGE"])
                 if not m:
                     continue
-                _notify(app_notifiers, f["title"].format(*m.groups()), f["body"].format(*m.groups()), False)
+                _notify(app_notifiers, f["title"].format(*m.groups()), f["body"].format(*m.groups()))
 
 
-@main_entry_point.command()
+@entry_point.command()
 @click.option("-c", "--config-file", required=True, type=click.File("r"))
 def test_filters(config_file):
     app_config = config_loader(config_file)
+    app_notifiers = notifiers.create_notifiers([{"type": "stdout"}])
     reader = journal.Reader()
+    reader.this_boot()
 
-    while True:
-        for entry in reader:
-            for f in app_config.filters:
-                m = f["match"].search(entry["MESSAGE"])
-                if not m:
-                    continue
-
-                print("Title: {}\nMessage:{}\n".format(f["title"].format(*m.groups()), f["body"].format(*m.groups())))
+    for entry in reader:
+        for f in app_config.filters:
+            m = f["match"].search(entry["MESSAGE"])
+            if not m:
+                continue
+            _notify(app_notifiers, f["title"].format(*m.groups()), f["body"].format(*m.groups()))
 
 
-@main_entry_point.command()
+@entry_point.command()
 @click.option("-c", "--config-file", required=True, type=click.File("r"))
 def test_notifiers(config_file):
     app_config = config_loader(config_file)
