@@ -1,0 +1,38 @@
+{
+    "notifiers": [
+        {
+            "type": "pushbullet",
+            "config": {
+                "key": "myapikey",
+                "prepend_hostname": true
+            }
+        },
+        {
+            "type": "smtp",
+            "enabled": false,
+            "config": {
+                "host": "my-smtp-server.example.com",
+                "from_addr": "Test User <test@example.com>",
+                "to_addrs": ["othertest@example.com"],
+                "port": 465,
+                "tls": true,
+                "username": "myuser",
+                "password": "mypass"
+            }
+        }
+    ],
+    "filters": [
+        {
+            "match": ".*sudo:session\\): session opened for user (.+) by (.+)\\(.*",
+            "title": "sudo alert",
+            "body": "User {1} used sudo to become {0}"
+        }
+    ],
+    "settings": {
+        "boot": {
+            "notify": true,
+            "add_public_ip": true,
+            "add_local_ips": true
+        }
+    }
+}

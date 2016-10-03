@@ -5,7 +5,7 @@ Requires=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/journald-notify run -c /etc/journald-notify.yml
+ExecStart=/usr/bin/journald-notify run -c /etc/journald-notify.json
 User=journald-notify
 
 [Install]
