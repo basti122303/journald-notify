@@ -18,25 +18,21 @@ install_requires = [
     "netifaces",
     "requests"
 ]
-setup(name="journald-notify",
-      classifiers=[
-          "Programming Language :: Python :: 3.4",
-          "Programming Language :: Python :: 3.5",
-          "Intended Audience :: System Administrators",
-          "Operating System :: POSIX :: Linux",
-          "Topic :: System :: Monitoring",
-      ],
-      description="Get notified about important events via PushBullet",
-      license="BSD",
-      author="Roey Darwish Dror, Matthew Gamble",
-      author_email="roey.ghost@gmail.com, git@matthewgamble.net",
-      url="https://github.com/djmattyg007/journald-notify",
-      version=__version__,  # pylint: disable=E0602
-      packages=find_packages(exclude=["tests"]),
-      install_requires=install_requires,
-      entry_points=dict(
-          console_scripts=[
-              "journald-notify = journald_notify.main:main_entry_point",
-          ]
-      ),
+setup(
+    name="journald-notify",
+    classifiers=[
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Intended Audience :: System Administrators",
+        "Operating System :: POSIX :: Linux",
+        "Topic :: System :: Monitoring",
+    ],
+    description="Get notified about important events via PushBullet",
+    license="BSD",
+    author="Roey Darwish Dror, Matthew Gamble",
+    author_email="roey.ghost@gmail.com, git@matthewgamble.net",
+    url="https://github.com/djmattyg007/journald-notify",
+    version=__version__,  # pylint: disable=E0602
+    packages=find_packages(exclude=["tests"]),
+    install_requires=install_requires
 )
