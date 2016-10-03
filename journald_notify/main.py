@@ -10,8 +10,7 @@ import click
 from systemd import journal
 from ._config import load as config_loader
 from ._ipfinder import IPFinder
-from . import notifiers
-
+from .notifiers import create_notifiers
 
 
 def _log_init():
@@ -71,7 +70,7 @@ def entry_point(verbose=False):
 @click.option("--boot-file", "boot_file_path", required=False, type=click.Path(exists=False, dir_okay=False, readable=False, path_type=str), default=os.path.join(tempfile.gettempdir(), ".journald-notify_boot"), envvar="JOURNALD_NOTIFY_BOOTFILE")
 def run(config_file, boot_file_path):
     app_config = config_loader(config_file)
-    notifier = notifiers.create_notifiers(app_config.notifiers)
+    notifier = create_notifiers(app_config.notifiers)
 
     boot_settings = app_config.get_settings("boot")
     if boot_settings and boot_settings.get("notify", False):
@@ -95,7 +94,7 @@ def run(config_file, boot_file_path):
 @click.option("-c", "--config-file", required=True, type=click.File("r"))
 def test_filters(config_file):
     app_config = config_loader(config_file)
-    notifier = notifiers.create_notifiers([{"type": "stdout"}])
+    notifier = create_notifiers([{"type": "stdout"}])
     reader = journal.Reader()
     reader.this_boot()
 
@@ -111,5 +110,5 @@ def test_filters(config_file):
 @click.option("-c", "--config-file", required=True, type=click.File("r"))
 def test_notifiers(config_file):
     app_config = config_loader(config_file)
-    notifier = notifiers.create_notifiers(app_config.notifiers)
+    notifier = create_notifiers(app_config.notifiers)
     notifier.notify("This is a test message", "This is the message body")
