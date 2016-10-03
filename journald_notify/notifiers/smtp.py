@@ -2,6 +2,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import logging
 from smtplib import SMTP, SMTP_SSL, SMTPException, SMTPResponseException
+import socket
 from time import sleep
 from .notifier import Notifier
 
@@ -47,6 +48,10 @@ class SMTPNotifier(Notifier):
                 self._logger.warn("Error returned from SMTP server: {0}".format(e.smtp_error))
                 sleep(5)
             except SMTPException as e:
+                retry_count += 1
+                self._logger.warn("Error while sending email: {0}".format(e))
+                sleep(5)
+            except socket.error as e:
                 retry_count += 1
                 self._logger.warn("Error while sending email: {0}".format(e))
                 sleep(5)
