@@ -1,5 +1,5 @@
 class Notifier(object):
-    def notify(self, title, message):
+    def notify(self, title, message, retry_forever=False):
         raise NotImplementedError()
 
     def _resolve_params(self, title, message):

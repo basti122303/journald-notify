@@ -29,20 +29,6 @@ logger = _log_init()
 ipfinder = IPFinder()
 
 
-def _notify(app_notifiers, title, body, retry=False):
-    for notifier in app_notifiers._notifiers:
-        while True:
-            try:
-                notifier.notify(title, body)
-            except socket.error:
-                if not retry:
-                    raise
-                logger.error("Socket error: {}", traceback.format_exc())
-                sleep(5)
-            else:
-                break
-
-
 def _get_ip_info(add_public_ip, add_local_ips):
     body = ""
     if add_public_ip:
@@ -62,12 +48,12 @@ def _get_ip_info(add_public_ip, add_local_ips):
     return body
 
 
-def _notify_boot(app_notifiers, boot_file_path, boot_settings):
+def _notify_boot(notifier, boot_file_path, boot_settings):
     if os.path.isfile(boot_file_path):
         return
 
     body = partial(_get_ip_info, boot_settings.get("add_public_ip", False), boot_settings.get("add_local_ips", False))
-    _notify(app_notifiers, "System booted", body, True)
+    notifier.notify("System booted", body, True)
 
     with open(boot_file_path, "wb"):
         pass
@@ -85,12 +71,12 @@ def entry_point(verbose=False):
 @click.option("--boot-file", "boot_file_path", required=False, type=click.Path(exists=False, dir_okay=False, readable=False, path_type=str), default=os.path.join(tempfile.gettempdir(), ".journald-notify_boot"), envvar="JOURNALD_NOTIFY_BOOTFILE")
 def run(config_file, boot_file_path):
     app_config = config_loader(config_file)
-    app_notifiers = notifiers.create_notifiers(app_config.notifiers)
+    notifier = notifiers.create_notifiers(app_config.notifiers)
 
     boot_settings = app_config.get_settings("boot")
     if boot_settings and boot_settings.get("notify", False):
         # Notification of boot should not hold up reading from journal ASAP
-        boot_notify_thread = threading.Thread(target=_notify_boot, args=(app_notifiers, boot_file_path, boot_settings), daemon=True)
+        boot_notify_thread = threading.Thread(target=_notify_boot, args=(notifier, boot_file_path, boot_settings), daemon=True)
         boot_notify_thread.start()
 
     reader = journal.Reader()
@@ -102,14 +88,14 @@ def run(config_file, boot_file_path):
                 m = f["match"].search(entry["MESSAGE"])
                 if not m:
                     continue
-                _notify(app_notifiers, f["title"].format(*m.groups()), f["body"].format(*m.groups()))
+                notifier.notify(f["title"].format(*m.groups()), f["body"].format(*m.groups()))
 
 
 @entry_point.command()
 @click.option("-c", "--config-file", required=True, type=click.File("r"))
 def test_filters(config_file):
     app_config = config_loader(config_file)
-    app_notifiers = notifiers.create_notifiers([{"type": "stdout"}])
+    notifier = notifiers.create_notifiers([{"type": "stdout"}])
     reader = journal.Reader()
     reader.this_boot()
 
@@ -118,12 +104,12 @@ def test_filters(config_file):
             m = f["match"].search(entry["MESSAGE"])
             if not m:
                 continue
-            _notify(app_notifiers, f["title"].format(*m.groups()), f["body"].format(*m.groups()))
+            notifier.notify(f["title"].format(*m.groups()), f["body"].format(*m.groups()))
 
 
 @entry_point.command()
 @click.option("-c", "--config-file", required=True, type=click.File("r"))
 def test_notifiers(config_file):
     app_config = config_loader(config_file)
-    app_notifiers = notifiers.create_notifiers(app_config.notifiers)
-    _notify(app_notifiers, "This is a test message", "This is the message body", True)
+    notifier = notifiers.create_notifiers(app_config.notifiers)
+    notifier.notify("This is a test message", "This is the message body")
