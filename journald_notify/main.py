@@ -16,7 +16,7 @@ from . import notifiers
 
 def _log_init():
     logger = logging.getLogger("journald-notify")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     sh = logging.StreamHandler()
     sh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -74,8 +74,10 @@ def _notify_boot(app_notifiers, boot_file_path, boot_settings):
 
 
 @click.group()
-def entry_point():
-    pass
+@click.option("-v", "--verbose", is_flag=True)
+def entry_point(verbose=False):
+    if verbose:
+        logger.setLevel(logging.DEBUG)
 
 
 @entry_point.command()
