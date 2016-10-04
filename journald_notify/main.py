@@ -10,6 +10,7 @@ import click
 from systemd import journal
 from ._config import load as config_loader
 from ._ipfinder import IPFinder
+from .filter import create_filters
 from .notifiers import create_notifiers
 
 
@@ -80,14 +81,16 @@ def run(config_file, boot_file_path):
 
     reader = journal.Reader()
     reader.seek_tail()
+    filters = create_filters(app_config.filters)
     while True:
         reader.wait()
         for entry in reader:
-            for f in app_config.filters:
-                m = f["match"].search(entry["MESSAGE"])
+            for f in filters:
+                m = f.match(entry["MESSAGE"], entry["SYSLOG_IDENTIFIER"])
                 if not m:
                     continue
-                notifier.notify(f["title"].format(*m.groups()), f["body"].format(*m.groups()))
+                title, body = m()
+                notifier.notify(title, body)
 
 
 @entry_point.command()
@@ -95,15 +98,18 @@ def run(config_file, boot_file_path):
 def test_filters(config_file):
     app_config = config_loader(config_file)
     notifier = create_notifiers([{"type": "stdout"}])
+
     reader = journal.Reader()
     reader.this_boot()
+    filters = create_filters(app_config.filters)
 
     for entry in reader:
-        for f in app_config.filters:
-            m = f["match"].search(entry["MESSAGE"])
+        for f in filters:
+            m = f.match(entry["MESSAGE"], entry["SYSLOG_IDENTIFIER"])
             if not m:
                 continue
-            notifier.notify(f["title"].format(*m.groups()), f["body"].format(*m.groups()))
+            title, body = m()
+            notifier.notify(title, body)
 
 
 @entry_point.command()

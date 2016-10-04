@@ -19,18 +19,8 @@ def load(f):
 class Config(object):
     def __init__(self, config):
         self._notifiers = config["notifiers"]
-        self._filters = self._prepare_filters(config.get("filters", []))
+        self._filters = config.get("filters", [])
         self._settings = config.get("settings", {})
-
-    def _prepare_filters(self, filters):
-        _filters = []
-        for f in filters:
-            _filters.append({
-                "match": re.compile(f["match"]),
-                "title": f["title"],
-                "body": f["body"]
-            })
-        return _filters
 
     @property
     def notifiers(self):
@@ -40,5 +30,5 @@ class Config(object):
     def filters(self):
         return self._filters
 
-    def get_settings(self, segment):
-        return self._settings.get(segment)
+    def get_settings(self, segment, default=None):
+        return self._settings.get(segment, default)
