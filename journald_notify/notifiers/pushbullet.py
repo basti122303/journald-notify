@@ -1,4 +1,3 @@
-import logging
 import socket
 from time import sleep
 import requests
@@ -8,15 +7,15 @@ from .notifier import Notifier
 class PushbulletNotifier(Notifier):
     PUSH_URL = "https://api.pushbullet.com/v2/pushes"
 
-    def __init__(self, key, prepend_hostname=True):
+    def __init__(self, logger, key, prepend_hostname=True):
         self._session = requests.Session()
         self._session.auth = (key, "")
-        self._session.headers.update({'Content-Type': 'application/json'})
+        self._session.headers.update({"Content-Type": "application/json"})
         self._prepend_hostname = prepend_hostname
         if self._prepend_hostname:
             self._hostname = socket.gethostname()
 
-        self._logger = logging.getLogger("journald-notify")
+        self._logger = logger
 
     def _resolve_params(self, title, message):
         title, message = super(PushbulletNotifier, self)._resolve_params(title, message)
@@ -46,6 +45,7 @@ class PushbulletNotifier(Notifier):
             else:
                 break
             if retry_count % 10 == 0:
+                # Warn every 10 attempts. Should only happen when retrying forever.
                 self._logger.warn("Failed to connect to pushbullet after {0} attempts (title: {1})".format(retry_count, *self._resolve_params(title, "")))
         if retry_count >= 3:
             self._logger.warn("Failed to contact pushbullet after three attempts (title: {0})".format(*self._resolve_params(title, "")))

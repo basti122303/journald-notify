@@ -1,6 +1,5 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import logging
 from smtplib import SMTP, SMTP_SSL, SMTPException, SMTPResponseException
 import socket
 from time import sleep
@@ -8,7 +7,7 @@ from .notifier import Notifier
 
 
 class SMTPNotifier(Notifier):
-    def __init__(self, host, from_addr, to_addrs, port=0, tls=True, username=None, password=None):
+    def __init__(self, logger, host, from_addr, to_addrs, port=0, tls=True, username=None, password=None):
         self._host = host
         self._from_addr = from_addr
         self._to_addrs = to_addrs
@@ -17,7 +16,7 @@ class SMTPNotifier(Notifier):
         self._username = username
         self._password = password
 
-        self._logger = logging.getLogger("journald-notify")
+        self._logger = logger
 
     def _prepare_conn(self):
         if self._tls:
@@ -58,6 +57,7 @@ class SMTPNotifier(Notifier):
             else:
                 break
             if retry_count % 10 == 0:
+                # Warn every 10 attempts. Should only happen when retrying forever.
                 self._logger.warn("Failed to send email after {0} attempts (title: {1})".format(retry_count, *self._resolve_params(title, "")))
         if retry_count >= 3:
             self._logger.warn("Failed to send email after three attempts (title: {0})".format(*self._resolve_params(title, "")))

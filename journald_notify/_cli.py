@@ -3,13 +3,14 @@ import threading
 from ._config import load as config_loader
 from .filter import create_filters
 from .monitor import Monitor
-from .notifiers import create_notifiers
+from .notifiers import NotifierFactory
 from ._utils import _notify_boot
 
 
 class CLI(object):
     def __init__(self, logger):
         self._logger = logger
+        self._notifier_factory = NotifierFactory(logger)
 
     def init(self, config_file, verbose=False):
         self._config = config_loader(config_file)
@@ -17,7 +18,7 @@ class CLI(object):
             self._logger.setLevel(logging.DEBUG)
 
     def run(self, boot_file_path):
-        notifier = create_notifiers(self._config.notifiers)
+        notifier = self._notifier_factory.create_notifiers(self._config.notifiers)
 
         boot_settings = self._config.get_settings("boot")
         if boot_settings and boot_settings.get("notify", False):
@@ -30,11 +31,11 @@ class CLI(object):
         monitor.monitor()
 
     def test_filters(self):
-        notifier = create_notifiers([{"type": "stdout"}])
+        notifier = self._notifier_factory.create_notifiers([{"type": "stdout"}])
         filters = create_filters(self._config.filters)
         monitor = Monitor(notifier, filters)
         monitor.scan()
 
     def test_notifiers(self):
-        notifier = create_notifiers(self._config.notifiers)
+        notifier = self._notifier_factory.create_notifiers(self._config.notifiers)
         notifier.notify("This is a test message", "This is the message body")

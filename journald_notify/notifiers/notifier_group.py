@@ -1,13 +1,12 @@
-import logging
 import threading
 from .notifier import Notifier
 
 
 class NotifierGroup(Notifier):
-    def __init__(self):
+    def __init__(self, logger):
         self._notifiers = []
 
-        self._logger = logging.getLogger("journald-notify")
+        self._logger = logger
 
     def add_notifier(self, notifier):
         self._notifiers.append(notifier)

@@ -6,20 +6,26 @@ from .stdout import StdoutNotifier
 from .._config import ConfigError
 
 
-def create_notifiers(notifier_config):
-    notifier_group = NotifierGroup()
-    for _notifier in notifier_config:
-        if "type" not in n:
-            raise ConfigError("Missing notifer type")
-        if "enabled" in _notfier and _notifier["enabled"] == False:
-            continue
+class NotifierFactory(object):
+    TYPE_MAPPING = {
+        "pushbullet": PushbulletNotifier,
+        "smtp": SMTPNotifier,
+        "stdout": StdoutNotifier
+    }
 
-        if _notifier["type"] == "pushbullet":
-            notifier_group.add_notifier(PushbulletNotifier(**_notifier["config"]))
-        elif _notifier["type"] == "smtp":
-            notifier_group.add_notifier(SMTPNotifier(**_notifier["config"]))
-        elif _notifier["type"] == "stdout":
-            notifier_group.add_notifier(StdoutNotifier())
-        else:
-            raise ConfigError("Unknown notifer type {}".format(_notifier["type"]))
-    return notifier_group
+    def __init__(self, logger):
+        self._logger = logger
+
+    def create_notifiers(self, notifier_config):
+        notifier_group = NotifierGroup(self._logger)
+        for _notifier in notifier_config:
+            if "type" not in _notifier:
+                raise ConfigError("Missing notifer type")
+            if "enabled" in _notifier and _notifier["enabled"] == False:
+                continue
+            if _notifier["type"] not in NotifierFactory.TYPE_MAPPING:
+                raise ConfigError("Unknown notifer type {}".format(_notifier["type"]))
+
+            klass = NotifierFactory.TYPE_MAPPING[_notifier["type"]]
+            notifier_group.add_notifier(klass(self._logger, **_notifier.get("config", {})))
+        return notifier_group
