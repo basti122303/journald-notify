@@ -20,8 +20,8 @@ class CLI(object):
     def run(self, boot_file_path):
         notifier = self._notifier_factory.create_notifiers(self._config.notifiers)
 
-        boot_settings = self._config.get_settings("boot")
-        if boot_settings and boot_settings.get("notify", False):
+        boot_settings = self._config.get_settings("boot", {})
+        if boot_settings.get("notify", False):
             # Notification of boot should not hold up reading from journal ASAP
             boot_notify_thread = threading.Thread(target=_notify_boot, args=(notifier, boot_file_path, boot_settings), daemon=True)
             boot_notify_thread.start()
