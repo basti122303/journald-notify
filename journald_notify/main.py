@@ -2,15 +2,14 @@ from functools import partial
 import os
 import threading
 import tempfile
-import socket
 import logging
 from time import sleep
 import traceback
 import click
-from systemd import journal
 from ._config import load as config_loader
 from ._ipfinder import IPFinder
 from .filter import create_filters
+from .monitor import Monitor
 from .notifiers import create_notifiers
 
 
@@ -79,18 +78,9 @@ def run(config_file, boot_file_path):
         boot_notify_thread = threading.Thread(target=_notify_boot, args=(notifier, boot_file_path, boot_settings), daemon=True)
         boot_notify_thread.start()
 
-    reader = journal.Reader()
-    reader.seek_tail()
     filters = create_filters(app_config.filters)
-    while True:
-        reader.wait()
-        for entry in reader:
-            for f in filters:
-                m = f.match(entry["MESSAGE"], entry["SYSLOG_IDENTIFIER"])
-                if not m:
-                    continue
-                title, body = m()
-                notifier.notify(title, body)
+    monitor = Monitor(notifier, filters)
+    monitor.monitor()
 
 
 @entry_point.command()
@@ -98,18 +88,9 @@ def run(config_file, boot_file_path):
 def test_filters(config_file):
     app_config = config_loader(config_file)
     notifier = create_notifiers([{"type": "stdout"}])
-
-    reader = journal.Reader()
-    reader.this_boot()
     filters = create_filters(app_config.filters)
-
-    for entry in reader:
-        for f in filters:
-            m = f.match(entry["MESSAGE"], entry["SYSLOG_IDENTIFIER"])
-            if not m:
-                continue
-            title, body = m()
-            notifier.notify(title, body)
+    monitor = Monitor(notifier, filters)
+    monitor.scan()
 
 
 @entry_point.command()
