@@ -7,7 +7,8 @@ from .notifier import Notifier
 
 
 class SMTPNotifier(Notifier):
-    def __init__(self, logger, host, from_addr, to_addrs, port=0, tls=True, username=None, password=None):
+    def __init__(self, logger, host, from_addr, to_addrs, port=0, tls=True, username=None, password=None, retry_interval=10):
+        self._logger = logger
         self._host = host
         self._from_addr = from_addr
         self._to_addrs = to_addrs
@@ -15,8 +16,7 @@ class SMTPNotifier(Notifier):
         self._tls = tls
         self._username = username
         self._password = password
-
-        self._logger = logger
+        self._retry_interval = retry_interval
 
     def _prepare_conn(self):
         if self._tls:
@@ -45,15 +45,15 @@ class SMTPNotifier(Notifier):
             except SMTPResponseException as e:
                 retry_count += 1
                 self._logger.warn("Error returned from SMTP server: {0}".format(e.smtp_error))
-                sleep(5)
+                sleep(self._retry_interval)
             except SMTPException as e:
                 retry_count += 1
                 self._logger.warn("Error while sending email: {0}".format(e))
-                sleep(5)
+                sleep(self._retry_interval)
             except socket.error as e:
                 retry_count += 1
                 self._logger.warn("Error while sending email: {0}".format(e))
-                sleep(5)
+                sleep(self._retry_interval)
             else:
                 break
             if retry_count % 10 == 0:

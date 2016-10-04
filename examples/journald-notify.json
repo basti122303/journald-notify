@@ -17,7 +17,8 @@
                 "port": 465,
                 "tls": true,
                 "username": "myuser",
-                "password": "mypass"
+                "password": "mypass",
+                "retry_interval": 30
             }
         }
     ],

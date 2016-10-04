@@ -7,15 +7,15 @@ from .notifier import Notifier
 class PushbulletNotifier(Notifier):
     PUSH_URL = "https://api.pushbullet.com/v2/pushes"
 
-    def __init__(self, logger, key, prepend_hostname=True):
+    def __init__(self, logger, key, prepend_hostname=True, retry_interval=10):
+        self._logger = logger
         self._session = requests.Session()
         self._session.auth = (key, "")
         self._session.headers.update({"Content-Type": "application/json"})
         self._prepend_hostname = prepend_hostname
+        self._retry_interval = retry_interval
         if self._prepend_hostname:
             self._hostname = socket.gethostname()
-
-        self._logger = logger
 
     def _resolve_params(self, title, message):
         title, message = super(PushbulletNotifier, self)._resolve_params(title, message)
@@ -37,11 +37,11 @@ class PushbulletNotifier(Notifier):
             except requests.exceptions.ConnectionError as e:
                 retry_count += 1
                 self._logger.warn("Could not connect to pushbullet: {}".format(e))
-                sleep(5)
+                sleep(self._retry_interval)
             except requests.exceptions.Timeout as e:
                 retry_count += 1
                 self._logger.warn("Timeout while connecting to pushbullet: {}".format(e))
-                sleep(5)
+                sleep(self._retry_interval)
             else:
                 break
             if retry_count % 10 == 0:
