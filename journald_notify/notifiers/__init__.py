@@ -8,18 +8,18 @@ from .._config import ConfigError
 
 def create_notifiers(notifier_config):
     notifier_group = NotifierGroup()
-    for n in notifier_config:
+    for _notifier in notifier_config:
         if "type" not in n:
             raise ConfigError("Missing notifer type")
-        if "enabled" in n and n["enabled"] == False:
+        if "enabled" in _notfier and _notifier["enabled"] == False:
             continue
-        if n["type"] == "pushbullet":
-            notifier_group.add_notifier(PushbulletNotifier(**n["config"]))
-        elif n["type"] == "smtp":
-            notifier_group.add_notifier(SMTPNotifier(**n["config"]))
-        elif n["type"] == "stdout":
+
+        if _notifier["type"] == "pushbullet":
+            notifier_group.add_notifier(PushbulletNotifier(**_notifier["config"]))
+        elif _notifier["type"] == "smtp":
+            notifier_group.add_notifier(SMTPNotifier(**_notifier["config"]))
+        elif _notifier["type"] == "stdout":
             notifier_group.add_notifier(StdoutNotifier())
         else:
-            raise ConfigError("Unknown notifer type {}".format(n["type"]))
-
+            raise ConfigError("Unknown notifer type {}".format(_notifier["type"]))
     return notifier_group
