@@ -60,4 +60,4 @@ class SMTPNotifier(Notifier):
                 # Warn every 10 attempts. Should only happen when retrying forever.
                 self._logger.warn("Failed to send email after {0} attempts (title: {1})".format(retry_count, *self._resolve_params(title, "")))
         if retry_count >= 3:
-            self._logger.warn("Failed to send email after three attempts (title: {0})".format(*self._resolve_params(title, "")))
+            self._logger.warn("Failed to send email after at least three attempts (title: {0})".format(*self._resolve_params(title, "")))
