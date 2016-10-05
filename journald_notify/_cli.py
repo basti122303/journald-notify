@@ -31,8 +31,11 @@ class CLI(object):
         monitor.monitor(self._config.get_settings("journal_reader_timeout", None))
 
     def test_filters(self):
-        notifier = self._notifier_factory.create_notifiers([{"type": "stdout"}])
+        notifier = self._notifier_factory.create_notifiers({"stdout": {"type": "stdout"}})
         filters = create_filters(self._config.filters)
+        # Force all filters to accept all notifiers, so that the stdout notifier is always used
+        for f in filters:
+            f.notifiers = []
         monitor = Monitor(notifier, filters)
         monitor.scan()
 

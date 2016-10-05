@@ -1,18 +1,23 @@
 import threading
-from .notifier import Notifier
 
 
-class NotifierGroup(Notifier):
+class NotifierGroup(object):
     def __init__(self, logger):
-        self._notifiers = []
-
         self._logger = logger
+        self._notifiers = {}
 
-    def add_notifier(self, notifier):
-        self._notifiers.append(notifier)
+    def add_notifier(self, name, notifier):
+        self._notifiers[name] = notifier
 
-    def notify(self, title, message, retry_forever=False):
-        for notifier in self._notifiers:
+    def get_notifiers(self, limit=[]):
+        if limit:
+            limit = filter(lambda x: x in self._notifiers.keys(), limit)
+            return { key: self._notifiers[key] for key in limit }.values()
+        else:
+            return self._notifiers.values()
+
+    def notify(self, title, message, retry_forever=False, limit=[]):
+        for notifier in self.get_notifiers(limit):
             if retry_forever:
                 # These notifications could go on forever and never actually trigger, so it's
                 # important that they each run in their own thread. This at least gives some of

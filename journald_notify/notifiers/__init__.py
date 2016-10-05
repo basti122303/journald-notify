@@ -18,7 +18,7 @@ class NotifierFactory(object):
 
     def create_notifiers(self, notifier_config):
         notifier_group = NotifierGroup(self._logger)
-        for _notifier in notifier_config:
+        for name, _notifier in notifier_config.items():
             if "type" not in _notifier:
                 raise ConfigError("Missing notifer type")
             if "enabled" in _notifier and _notifier["enabled"] == False:
@@ -27,5 +27,5 @@ class NotifierFactory(object):
                 raise ConfigError("Unknown notifer type {}".format(_notifier["type"]))
 
             klass = NotifierFactory.TYPE_MAPPING[_notifier["type"]]
-            notifier_group.add_notifier(klass(self._logger, **_notifier.get("config", {})))
+            notifier_group.add_notifier(name, klass(self._logger, **_notifier.get("config", {})))
         return notifier_group

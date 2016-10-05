@@ -13,7 +13,7 @@ class Monitor(object):
                 if not m:
                     continue
                 title, body = m()
-                self._notifier.notify(title, body)
+                self._notifier.notify(title, body, limit=f.notifiers)
 
     def monitor(self, reader_timeout=None):
         reader = journal.Reader()

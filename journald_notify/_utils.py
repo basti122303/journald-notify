@@ -33,7 +33,7 @@ def _notify_boot(notifier, boot_file_path, boot_settings):
         return
 
     body = partial(_get_ip_info, boot_settings.get("add_public_ip", False), boot_settings.get("add_local_ips", False))
-    notifier.notify("System booted", body, True)
+    notifier.notify("System booted", body, retry_forever=True, limit=boot_settings.get("notifiers", []))
 
     with open(boot_file_path, "wb"):
         pass

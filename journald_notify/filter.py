@@ -2,11 +2,12 @@ import re
 
 
 class Filter(object):
-    def __init__(self, regex, title, body="", services=[]):
+    def __init__(self, regex, title, body="", services=[], notifiers=[]):
         self._regex = re.compile(regex)
         self._title = title
         self._body = body
         self._services = services
+        self.notifiers = notifiers
 
     def match(self, entry, service):
         if self._services and service not in self._services:
@@ -29,6 +30,7 @@ def create_filters(filter_config):
             _filter["match"],
             _filter["title"],
             _filter.get("body", ""),
-            _filter.get("services", [])
+            _filter.get("services", []),
+            _filter.get("notifiers", [])
         ))
     return filters
