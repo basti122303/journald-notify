@@ -1,6 +1,6 @@
 from functools import partial
-import os
 import logging
+import os
 import traceback
 from ._ipfinder import IPFinder
 
