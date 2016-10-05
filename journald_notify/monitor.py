@@ -5,6 +5,7 @@ class Monitor(object):
     def __init__(self, notifier, filters):
         self._notifier = notifier
         self._filters = filters
+        self.reader_timeout = None
 
     def _scan(self, reader):
         for entry in reader:
@@ -19,7 +20,7 @@ class Monitor(object):
         reader = journal.Reader()
         reader.seek_tail()
         while True:
-            reader.wait()
+            reader.wait(self.reader_timeout)
             self._scan(reader)
 
     def scan(self):

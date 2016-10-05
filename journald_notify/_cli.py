@@ -28,6 +28,7 @@ class CLI(object):
 
         filters = create_filters(self._config.filters)
         monitor = Monitor(notifier, filters)
+        monitor.reader_timeout = self._config.get_settings("journal_reader_timeout", None)
         monitor.monitor()
 
     def test_filters(self):
