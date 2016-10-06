@@ -1,5 +1,6 @@
 from .notifier import Notifier
 from .notifier_group import NotifierGroup
+from .notifysend import NotifySendNotifier
 from .pushbullet import PushbulletNotifier
 from .smtp import SMTPNotifier
 from .stdout import StdoutNotifier
@@ -8,6 +9,7 @@ from .._config import ConfigError
 
 class NotifierFactory(object):
     TYPE_MAPPING = {
+        "notify-send": NotifySendNotifier,
         "pushbullet": PushbulletNotifier,
         "smtp": SMTPNotifier,
         "stdout": StdoutNotifier
