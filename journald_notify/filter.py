@@ -35,11 +35,11 @@ class Filter(object):
                 continue
             condition_type = self._conditions[key]["type"]
             if condition_type == "exclude":
-                for exclude in self._condition[key]["exclude"]:
+                for exclude in self._conditions[key]["exclude"]:
                     if re.search(exclude, value):
                         return False
             elif condition_type == "include":
-                for include in self._condition[key]["include"]:
+                for include in self._conditions[key]["include"]:
                     if re.search(include, value):
                         return False
             else:
