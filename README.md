@@ -65,7 +65,7 @@ If this is set to `true`, you will need to ensure that the user running `journal
 Whether or not `notify-send-headless` should be used instead of `notify-send`.
 
 ## Notes
-This is a fork of `[pushjournal](https://github.com/r-darwish/pushjournal)` by r-darwish. I re-wrote most of the code because I was unhappy about a few things. Most notably, it would not start reading from the journal until it had sent the boot notification, and it would not reliably detect the public and private IP addresses unless network connectivity was available as soon as the program was launched. This rewrite solves those problems, and also stops it from spamming into the journal itself during periods where internet connectivity is lacking.
+This is a fork of [`pushjournal`](https://github.com/r-darwish/pushjournal) by r-darwish. I re-wrote most of the code because I was unhappy about a few things. Most notably, it would not start reading from the journal until it had sent the boot notification, and it would not reliably detect the public and private IP addresses unless network connectivity was available as soon as the program was launched. This rewrite solves those problems, and also stops it from spamming into the journal itself during periods where internet connectivity is lacking.
 
 Other motivations for the rewrite include removing the unnecessary dependencies on the logbook and yaml packages. JSON configuration is just as good and comes built-in with python, while YAML support does not. Also, python's built-in logging module is more than good enough for the majority of problems.
 
