@@ -21,7 +21,6 @@ install_requires = [
 setup(
     name="journald-notify",
     classifiers=[
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Intended Audience :: System Administrators",
         "Operating System :: POSIX :: Linux",
