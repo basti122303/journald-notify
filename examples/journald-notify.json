@@ -1,13 +1,13 @@
 {
-    "notifiers": [
-        {
+    "notifiers": {
+        "pushbullet": {
             "type": "pushbullet",
             "config": {
                 "key": "myapikey",
                 "prepend_hostname": true
             }
         },
-        {
+        "email": {
             "type": "smtp",
             "enabled": false,
             "config": {
@@ -20,20 +20,46 @@
                 "password": "mypass",
                 "retry_interval": 30
             }
+        },
+        "libnotify": {
+            "type": "notify-send",
+            "config": {
+                "retry_interval": 10
+            }
         }
-    ],
+    },
     "filters": [
         {
-            "match": ".*sudo:session\\): session opened for user (.+) by (.+)\\(.*",
-            "title": "sudo alert",
-            "body": "User {1} used sudo to become {0}"
+            "match": "(?P<username>.+) : .+ ; PWD=(?P<pwd>.+) ; USER=(?P<became.+) ; COMMAND=(?P<cmd>.+)",
+            "title": "Sudo usage alert",
+            "body": "User: {username}\nBecame: {became}\nCommand: {cmd}\nPWD: {pwd}",
+            "services": ["sudo"],
+            "notifiers": ["pushbullet", "email"],
+            "conditions": {
+                "username": {
+                    "type": "exclude",
+                    "exclude": ["root"]
+                },
+                "cmd": {
+                    "type": "exclude",
+                    "exclude": ["^\/usr\/s?bin\/notify-send-headless "]
+                }
+            }
+        },
+        {
+            "match": "Accepted password for (?P<username>.+) from (?P<ip>.+) ",
+            "title": "SSH login",
+            "body": "User: {username}\nIP: {ip}",
+            "services": ["sshd"],
+            "notifiers": ["pushbullet", "libnotify"]
         }
     ],
     "settings": {
         "boot": {
             "notify": true,
             "add_public_ip": true,
-            "add_local_ips": true
+            "add_local_ips": true,
+            "notifiers": ["pushbullet", "email"]
         }
     }
 }
