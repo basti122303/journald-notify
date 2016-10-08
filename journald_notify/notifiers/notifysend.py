@@ -29,7 +29,7 @@ class NotifySendNotifier(Notifier):
         retry_count = 0
         while retry_forever == True or retry_count < 3:
             try:
-                subprocess.run(self._prepare_cmd(title, message), check=True)
+                subprocess.run(self._prepare_cmd(title, message), check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except subprocess.CalledProcessError as e:
                 retry_count += 1
                 self._logger.warn("Error while attempting to contact notification daemon: {0}".format(e))
