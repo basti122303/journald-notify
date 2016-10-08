@@ -56,7 +56,7 @@ The password required to connect to the SMTP server.
 
 ### notify-send
 
-Due to the nature of how the notification daemon works in most Linux distributions, you generally need to use [notify-send-headless](https://proc.readthedocs.io/en/latest/api.html#module-proc.notify) with `sudo` when attempting to display notifications from a daemon process. As such, this is the default configuration for the `notify-send` notifier.
+Due to the nature of how the notification daemon works in most Linux distributions, you generally need to use [`notify-send-headless`](https://proc.readthedocs.io/en/latest/api.html#module-proc.notify) with `sudo` when attempting to display notifications from a daemon process. As such, this is the default configuration for the `notify-send` notifier.
 
 #### `sudo` (optional, default=`true`)
 If this is set to `true`, you will need to ensure that the user running `journald-notify` has permission to run `notify-send` or `notify-send-headless` with passwordless sudo. Note that you don't need to whitelist both - if you're using `notify-send-headless`, you don't need to whitelist `notify-send`.
