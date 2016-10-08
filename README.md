@@ -13,6 +13,12 @@ Once your configuration is set you can run `journald-notify -c /path/to/config.j
 
 You can also check out `examples/journald-notify.service` for an example systemd unit file.
 
+### Version 2
+In addition to all of the new features you can make use of in v2, such as filtering notifications based on captured values from the matching regexes, there are two crucial differences between v1 config and v2 config:
+
+- All notifiers must now have a unique identifier. These are referenced when specifying which messages should be sent to which notifiers.
+- All capturing groups in matching regexes must now be named. Non-named capturing groups will not be available for display and filtering purposes.
+
 ## Notifier configuration
 
 All notifiers support an optional `retry_interval` setting. This should be a positive integer that indicates how long the notifier should wait after it encounters an error before trying again.
@@ -22,7 +28,7 @@ All notifiers support an optional `retry_interval` setting. This should be a pos
 #### `key` (required)
 Your Pushbullet API key.
 
-#### `prepend\_hostname` (optional, default=`true`)
+#### `prepend_hostname` (optional, default=`true`)
 Whether or not the hostname of the machine should be prepended to the title of notifications.
 
 ### SMTP
@@ -61,6 +67,6 @@ Whether or not `notify-send-headless` should be used instead of `notify-send`.
 ## Notes
 This is a fork of `pushbullet` by r-darwish. I re-wrote most of the code because I was unhappy about a few things. Most notably, it would not start reading from the journal until it had sent the boot notification, and it would not reliably detect the public and private IP addresses unless network connectivity was available as soon as the program was launched. This rewrite solves those problems, and also stops it from spamming into the journal itself during periods where internet connectivity is lacking.
 
-Other motivations for the rewrite include removing the unnecessary dependnecies on the logbook and yaml packages. JSON configuration is just as good and comes built-in with python, while YAML support does not. Also, python's built-in logging module is more than good enough for the majority of problems.
+Other motivations for the rewrite include removing the unnecessary dependencies on the logbook and yaml packages. JSON configuration is just as good and comes built-in with python, while YAML support does not. Also, python's built-in logging module is more than good enough for the majority of problems.
 
-Finally, this rewrite is more flexible with the filters it lets you apply. You can specify one or more services that a filter should target specifically, or you can specify none at all and just use it for boot notifications.
+Finally, this rewrite is more flexible with the filters it lets you apply. You can specify one or more services that a filter should target specifically, you can ignore notifications based on what values are captured from the matching regex, or you can specify none at all and just use it for boot notifications.
