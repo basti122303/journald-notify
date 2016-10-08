@@ -1,10 +1,10 @@
 # journald-notify
 systemd's journal is awesome. Wouldn't it be more awesome if it could send notifications?
 
-journald-notify is a daemon that listens to the systemd's journal and sends notifications based on filters that you specify. Currently it supports sending push notifications through SMTP or [Pushbullet](https://www.pushbullet.com/), and also notifications to the notification daemon, by way of notify-send.
+journald-notify is a daemon that listens to systemd's journal and sends notifications based on filters that you specify. Currently it supports sending push notifications through SMTP or [Pushbullet](https://www.pushbullet.com/), and also notifications to the notification daemon, by way of notify-send.
 
 ## Usage
-See `examples/journald-notify.json` for an example of a configuration file. There are two subcommands to help testing your configuration:
+See `examples/journald-notify.json` for an example of a configuration file. There are two subcommands to aid you in testing your configuration:
 
 1. `journald-notify -c /path/to/config.json test_notifiers` will try to send a test message through all of your notifiers.
 2. `journald-notify -c /path/to/config.json test_filters` will run through your journal history and print entries matching your filters.
