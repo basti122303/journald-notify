@@ -80,6 +80,7 @@ class Monitor(object):
     def monitor(self, reader_timeout=None):
         reader = journal.Reader()
         reader.seek_tail()
+        reader.get_previous()
         while True:
             reader.wait(reader_timeout)
             self._scan(reader)
