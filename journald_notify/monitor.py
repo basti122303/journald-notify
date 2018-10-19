@@ -28,11 +28,11 @@ def entry_to_json(entry):
         return json.dumps(data)
     except TypeError:
         # remove data that are not serializable to json
-        try:
-            for k in data.copy():
+        for k in data.copy():
+            try:
                 json.dumps(data[k])
-        except TypeError:
-            data.pop(k, None)
+            except TypeError:
+                data.pop(k, None)
 
     return json.dumps(data)
 
