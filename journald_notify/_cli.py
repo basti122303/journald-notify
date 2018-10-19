@@ -27,7 +27,8 @@ class CLI(object):
             boot_notify_thread.start()
 
         filters = create_filters(self._config.filters)
-        monitor = Monitor(notifier, filters)
+        reader_settings = self._config.get_settings("reader", {})
+        monitor = Monitor(notifier, filters, reader_settings)
         monitor.monitor(self._config.get_settings("journal_reader_timeout", None))
 
     def test_filters(self):
@@ -36,7 +37,8 @@ class CLI(object):
         # Force all filters to accept all notifiers, so that the stdout notifier is always used
         for f in filters:
             f.notifiers = []
-        monitor = Monitor(notifier, filters)
+        reader_settings = self._config.get_settings("reader", {})
+        monitor = Monitor(notifier, filters, reader_settings)
         monitor.scan()
 
     def test_notifiers(self):

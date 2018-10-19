@@ -60,9 +60,10 @@ def entry_to_body(entry):
 entry_to_title = entry_to_priority_str
 
 class Monitor(object):
-    def __init__(self, notifier, filters):
+    def __init__(self, notifier, filters, reader_settings):
         self._notifier = notifier
         self._filters = filters
+        self._reader_settings = reader_settings
 
     def _scan(self, reader):
         for entry in reader:
@@ -78,7 +79,7 @@ class Monitor(object):
                 self._notifier.notify(title, body, limit=f.notifiers)
 
     def monitor(self, reader_timeout=None):
-        reader = journal.Reader()
+        reader = journal.Reader(**self._reader_settings)
         reader.seek_tail()
         reader.get_previous()
         while True:
@@ -86,6 +87,6 @@ class Monitor(object):
             self._scan(reader)
 
     def scan(self):
-        reader = journal.Reader()
+        reader = journal.Reader(**self._reader_settings)
         reader.this_boot()
         self._scan(reader)

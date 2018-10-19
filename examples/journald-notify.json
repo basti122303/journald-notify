@@ -65,6 +65,12 @@
             "add_public_ip": true,
             "add_local_ips": true,
             "notifiers": ["pushbullet", "email"]
+
+        },
+        "settings": {
+            "reader": {
+                "path": "/var/log/journal/remote"
+            }
         }
     }
 }
