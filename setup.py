@@ -33,5 +33,6 @@ setup(
     url="https://github.com/djmattyg007/journald-notify",
     version=__version__,  # pylint: disable=E0602
     packages=find_packages(exclude=["tests"]),
+    scripts=['./journald-notify'],
     install_requires=install_requires
 )
