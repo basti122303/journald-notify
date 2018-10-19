@@ -31,8 +31,6 @@
     "filters": [
         {
             "match": "(?P<username>.+) : .+ ; PWD=(?P<pwd>.+) ; USER=(?P<became.+) ; COMMAND=(?P<cmd>.+)",
-            "title": "Sudo usage alert",
-            "body": "User: {username}\nBecame: {became}\nCommand: {cmd}\nPWD: {pwd}",
             "services": ["sudo"],
             "notifiers": ["pushbullet", "email"],
             "conditions": {
@@ -48,10 +46,17 @@
         },
         {
             "match": "Accepted password for (?P<username>.+) from (?P<ip>.+) ",
-            "title": "SSH login",
-            "body": "User: {username}\nIP: {ip}",
             "services": ["sshd"],
             "notifiers": ["pushbullet", "libnotify"]
+        },
+        {
+            "match": "(?P<message>.*)",
+            "field_conditions": {
+                "PRIORITY": {
+                    "type": "lte",
+                    "value": 3
+                }
+            }
         }
     ],
     "settings": {

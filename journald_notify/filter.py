@@ -1,20 +1,30 @@
 import re
 from ._config import ConfigError
 
+field_condition_types = {
+    "lte": lambda condition, field_value: field_value <= condition["value"]
+}
+
+def check_field_conditions(field_conditions, entry):
+    for field, condition in field_conditions.items():
+        if field not in entry:
+            return False
+        if not field_condition_types[condition["type"]](condition, entry[field]):
+            return False
+    return True
 
 class Filter(object):
-    def __init__(self, regex, title, body="", services=[], notifiers=[], conditions=[]):
+    def __init__(self, regex, services=[], notifiers=[], conditions=[], field_conditions=[]):
         self._regex = re.compile(regex)
-        self._title = title
-        self._body = body
         self._services = services
         self.notifiers = notifiers
         self._conditions = conditions
+        self._field_conditions = field_conditions
 
     def match(self, entry, service):
         if self._services and service not in self._services:
             return None
-        m = self._regex.search(entry)
+        m = self._regex.search(entry["MESSAGE"])
         if not m:
             return None
         matched_values = m.groupdict()
@@ -23,11 +33,11 @@ class Filter(object):
             if not self._check_conditions(matched_values):
                 return None
 
-        def match_resolver():
-            title = self._title.format(**matched_values)
-            body = self._body.format(**matched_values)
-            return title, body
-        return match_resolver
+        if self._field_conditions:
+            if not check_field_conditions(self._field_conditions, entry):
+                return None
+
+        return True
 
     def _check_conditions(self, matched_values):
         for key, value in matched_values.items():
@@ -53,10 +63,9 @@ def create_filters(filter_config):
     for _filter in filter_config:
         filters.append(Filter(
             _filter["match"],
-            _filter["title"],
-            _filter.get("body", ""),
             _filter.get("services", []),
             _filter.get("notifiers", []),
-            _filter.get("conditions", [])
+            _filter.get("conditions", []),
+            _filter.get("field_conditions", [])
         ))
     return filters
