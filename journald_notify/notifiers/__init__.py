@@ -3,6 +3,7 @@ from .notifier_group import NotifierGroup
 from .notifysend import NotifySendNotifier
 from .pushbullet import PushbulletNotifier
 from .smtp import SMTPNotifier
+from .sentry import SentryNotifier
 from .stdout import StdoutNotifier
 from .._config import ConfigError
 
@@ -12,6 +13,7 @@ class NotifierFactory(object):
         "notify-send": NotifySendNotifier,
         "pushbullet": PushbulletNotifier,
         "smtp": SMTPNotifier,
+        "sentry": SentryNotifier,
         "stdout": StdoutNotifier
     }
 

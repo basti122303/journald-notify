@@ -1,5 +1,11 @@
 {
     "notifiers": {
+        "sentry": {
+            "type": "sentry",
+            "config": {
+                "dsn": "<dsn>"
+            }
+        },
         "pushbullet": {
             "type": "pushbullet",
             "config": {
