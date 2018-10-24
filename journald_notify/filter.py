@@ -2,14 +2,14 @@ import re
 from ._config import ConfigError
 
 field_condition_types = {
-    "lte": lambda condition, field_value: field_value <= condition["value"]
+    "lte": lambda condition, field_value: field_value != None and field_value <= condition["value"],
+    "eq": lambda condition, field_value: field_value == condition["value"],
+    "neq": lambda condition, field_value: field_value != condition["value"],
 }
 
 def check_field_conditions(field_conditions, entry):
     for field, condition in field_conditions.items():
-        if field not in entry:
-            return False
-        if not field_condition_types[condition["type"]](condition, entry[field]):
+        if not field_condition_types[condition["type"]](condition, entry.get(field)):
             return False
     return True
 
