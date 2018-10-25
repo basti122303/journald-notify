@@ -1,7 +1,20 @@
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
+
 # journald-notify
 systemd's journal is awesome. Wouldn't it be more awesome if it could send notifications?
 
 journald-notify is a daemon that listens to systemd's journal and sends notifications based on filters that you specify. Currently it supports sending push notifications through SMTP or [Pushbullet](https://www.pushbullet.com/), and also notifications to the notification daemon, by way of notify-send.
+
+## Versioning
+
+Version contains 3 numbers: `x.y.z`
+
+- `x` - incremented when there are breaking changes for users of the app (e.g. change of configuration format)
+- `y` - incremented when there are new features
+- `z` - incremented when there are only bugfixes
+
+When `x` changes, `y` and `z` should be 0.
+When `y` changes, `z` should be 0.
 
 ## Usage
 See `examples/journald-notify.json` for an example of a configuration file. There are two subcommands to aid you in testing your configuration:
