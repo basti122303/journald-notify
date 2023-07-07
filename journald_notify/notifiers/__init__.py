@@ -1,3 +1,4 @@
+from .command import CommandNotifier
 from .notifier import Notifier
 from .notifier_group import NotifierGroup
 from .notifysend import NotifySendNotifier
@@ -14,7 +15,8 @@ class NotifierFactory(object):
         "pushbullet": PushbulletNotifier,
         "smtp": SMTPNotifier,
         "sentry": SentryNotifier,
-        "stdout": StdoutNotifier
+        "stdout": StdoutNotifier,
+        "command": CommandNotifier,
     }
 
     def __init__(self, logger):
