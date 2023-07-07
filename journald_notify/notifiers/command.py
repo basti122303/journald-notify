@@ -4,7 +4,7 @@ from .notifier import Notifier
 
 
 class CommandNotifier(Notifier):
-    def __init__(self, logger, sudo=False, program, args=[], retry_interval=10):
+    def __init__(self, logger, program, sudo=False, args=[], retry_interval=10):
         self._logger = logger
         self._sudo = sudo
         self._program = program
