@@ -4,17 +4,19 @@ from .notifier import Notifier
 
 
 class CommandNotifier(Notifier):
-    def __init__(self, logger, sudo=False, program='echo', args=[], retry_interval=10):
+    def __init__(self, logger, sudo=False, program, args=[], retry_interval=10):
         self._logger = logger
         self._sudo = sudo
-        self._headless = headless
+        self._program = program
+        self._args = args
         self._retry_interval = retry_interval
 
     def _prepare_cmd(self):
         cmdline = []
         if self._sudo:
             cmdline.append("sudo")
-        cmdline.append(program)
+        cmdline.append(self._program)
+        cmdline.extend(self._args)
         return cmdline
 
     def notify(self, title, message, retry_forever=False):
